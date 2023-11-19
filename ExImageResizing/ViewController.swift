@@ -46,15 +46,13 @@ class ViewController: UIViewController {
         let normalItem = MyModel(text: "normal item:", image: image)
         dataSource.append(normalItem)
         
-        let startTime = Date()
-        let startMemory = getMemoryUsage()
-        
 //        benchmarkNormal()
 //        benchmarkResizeV1()
 //        benchmarkResizeV2()
-        benchmarkResizeV3()
         
-        print("time: \(Date().timeIntervalSince(startTime))s, memory: \(self.getMemoryUsage() - startMemory) MB")
+        print(image.imageOrientation == .up) // false
+        print(image.resizeV3(to: .init(width: 100, height: 100))?.imageOrientation == .up) // true
+        benchmarkResizeV3()
         
 //        tableView.reloadData()
     }
@@ -134,17 +132,16 @@ extension UIImage {
     func resizeV3(to size: CGSize) -> UIImage? {
         let options: [CFString: Any] = [
             kCGImageSourceShouldCache: false,
-//            kCGImageSourceCreateThumbnailFromImageAlways: true, // 이미지 섬네일을 항상 만들것인가 여부
-//            kCGImageSourceCreateThumbnailFromImageIfAbsent: true, // 캐싱기능 (이 이미지에 대한 썸네일이 이미 있는 경우 이것을 사용)
-//            kCGImageSourceCreateThumbnailWithTransform: true, // alpha 유지 여부
+            kCGImageSourceCreateThumbnailFromImageAlways: true,
+            kCGImageSourceCreateThumbnailFromImageIfAbsent: true,
             kCGImageSourceThumbnailMaxPixelSize: max(size.width, size.height),
-//            kCGImageSourceCreateThumbnailWithTransform: true
+            kCGImageSourceCreateThumbnailWithTransform: true
         ]
         
         guard
             let data = jpegData(compressionQuality: 1.0),
             let imageSource = CGImageSourceCreateWithData(data as CFData, nil),
-            let cgImage = CGImageSourceCreateThumbnailAtIndex(imageSource, 0, [CFString: Any]() as CFDictionary)
+            let cgImage = CGImageSourceCreateThumbnailAtIndex(imageSource, 0, options as CFDictionary)
         else { return nil }
         
         let resizedImage = UIImage(cgImage: cgImage)
